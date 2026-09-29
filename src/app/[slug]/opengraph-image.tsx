@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { ImageResponse } from 'next/og';
 import { getPostBySlug } from '@/lib/posts';
 import { SITE_NAME } from '@/lib/site';
@@ -13,6 +15,16 @@ import { SITE_NAME } from '@/lib/site';
  * generateMetadata sets openGraph.images only when og_image or hero_image is
  * populated, so Next falls back to this route for every other post.
  */
+/**
+ * The real wordmark, inlined as a data URI. ImageResponse cannot resolve a
+ * relative asset path at render time, and fetching it over the network would
+ * make the card depend on the site being reachable from inside its own build.
+ * Read once at module scope.
+ */
+const LOGO = `data:image/png;base64,${fs
+  .readFileSync(path.join(process.cwd(), 'public', 'cosora-logo.png'))
+  .toString('base64')}`;
+
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 export const alt = SITE_NAME;
@@ -42,17 +54,8 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div
-            style={{
-              fontSize: 26,
-              fontWeight: 700,
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              color: '#C8102E',
-            }}
-          >
-            COSORA
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={LOGO} alt="Cosora" height={30} />
           <div style={{ width: 1, height: 26, background: '#d6d3cc' }} />
           <div
             style={{

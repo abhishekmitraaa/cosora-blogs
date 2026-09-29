@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
+import cosoraLogo from '../../../public/cosora-logo.png';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/JsonLd';
@@ -237,8 +238,10 @@ export default async function ArticlePage({ params }: Params) {
 
             <div className={styles.byline}>
               <div className={styles.author}>
-                <span className={styles.avatar} aria-hidden="true">
-                  C
+                {/* The real wordmark, not a letter in a coloured circle: the
+                    byline is the organisation, so an avatar is the wrong mark. */}
+                <span className={styles.publisherMark}>
+                  <Image src={cosoraLogo} alt="Cosora" width={72} height={15} />
                 </span>
                 <div className={styles.authorText}>
                   <span className={styles.authorName}>{post.author || 'Cosora Team'}</span>

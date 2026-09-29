@@ -74,19 +74,22 @@
   gap: 12px;
 }
 
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--pill);
-  background: var(--cosora-red);
-  color: var(--white);
-  display: flex;
+/* Replaces the old initial-in-a-circle avatar. A wordmark needs a rectangle,
+   not a 40px circle, so this is a chip rather than an avatar slot. */
+.publisherMark {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-style: italic;
-  font-size: 20px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  border: 1px solid var(--rule-cool);
+  flex: none;
+}
+.publisherMark img {
+  height: 15px;
+  width: auto;
+  display: block;
 }
 
 .authorText {
