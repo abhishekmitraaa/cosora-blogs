@@ -9,3 +9,6 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
+
+# Impeccable design-skill local cache and decision logs
+.impeccable/

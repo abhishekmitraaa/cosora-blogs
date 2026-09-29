@@ -1,0 +1,492 @@
+/*
+ * About — "the route an order takes".
+ *
+ * The page is shaped like the thing it describes: a statement, then the three
+ * stages of a real order strung along a drawn line, then why it was built, then
+ * the two sides of the trade given equal width.
+ *
+ * Inherits the Journal's world wholesale (globals.css tokens, the masthead rule,
+ * the display face). Nothing here introduces a colour, a face or a radius that
+ * the Journal did not already have.
+ */
+
+/* ── Statement ─────────────────────────────────────────────────────────────── */
+
+.statement {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 44px 32px 0;
+}
+
+/* The Journal's masthead rule. Carries facts, not a label. */
+.rule {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.rule span {
+  white-space: nowrap;
+}
+
+.title {
+  margin: 32px 0 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: clamp(46px, 8.4vw, 132px);
+  line-height: 0.84;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.accent {
+  color: var(--cosora-red);
+}
+
+.standfirst {
+  max-width: 620px;
+  margin: 32px 0 0;
+  padding-bottom: 56px;
+  font-size: 19px;
+  line-height: 1.6;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+/* ── The route ─────────────────────────────────────────────────────────────── */
+
+.route {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 24px 32px 88px;
+}
+
+.stages {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 72px;
+}
+
+/*
+ * Two hairlines in the same place: the unwalked track, and the walked part of
+ * the route drawn over it. The second one is the page's single authored moment.
+ */
+.stages::before,
+.stages::after {
+  content: '';
+  position: absolute;
+  left: 23px;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+}
+.stages::before {
+  background: var(--rule);
+}
+.stages::after {
+  background: var(--cosora-red);
+  transform-origin: top center;
+}
+
+/*
+ * Scroll-driven, so the route fills as the reader walks it, with no JavaScript
+ * at all: this site ships zero client components and that is not negotiable.
+ * Browsers without scroll timelines get the line already drawn, which is the
+ * correct resting state rather than a degraded one.
+ */
+@supports (animation-timeline: view()) {
+  .stages::after {
+    animation: drawRoute linear both;
+    animation-timeline: view();
+    animation-range: cover 0% cover 100%;
+  }
+}
+
+@keyframes drawRoute {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stages::after {
+    animation: none;
+    transform: scaleY(1);
+  }
+}
+
+.stage {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+/* Sits on the line as a node, so the rule reads as a route rather than a border. */
+.stageNum {
+  position: relative;
+  z-index: 1;
+  display: block;
+  padding: 6px 0;
+  background: var(--paper);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--cosora-red);
+  text-align: center;
+}
+
+.stageBody {
+  max-width: var(--measure);
+  padding-top: 2px;
+}
+
+.stageTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: clamp(28px, 3.6vw, 44px);
+  line-height: 0.94;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.stageCopy {
+  margin: 16px 0 0;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--ink-body);
+  text-wrap: pretty;
+}
+
+/*
+ * Figures land inside the stage they explain, as a footnote to a claim already
+ * made in prose. They are deliberately not a trophy band: the number is the
+ * evidence for the sentence above it, so it is set at reading scale.
+ */
+.figures {
+  margin: 24px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+}
+
+.figure {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.figureValue {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.figureLabel {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ── Why ───────────────────────────────────────────────────────────────────── */
+
+.why {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.whyInner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 88px 32px;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 56px;
+  align-items: start;
+}
+
+.whyTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: clamp(34px, 4.6vw, 62px);
+  line-height: 0.9;
+  color: var(--white);
+  text-wrap: balance;
+}
+
+.whyBody {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.whyBody p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.82);
+  text-wrap: pretty;
+}
+
+.whyBody p:first-child {
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--white);
+}
+
+/* ── Both sides of the trade ───────────────────────────────────────────────── */
+
+.close {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.side {
+  padding: 72px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.sideBuy {
+  background: var(--card);
+}
+
+.sideSell {
+  background: var(--cosora-red);
+}
+
+.sideTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: clamp(30px, 3.8vw, 48px);
+  line-height: 0.92;
+}
+.sideBuy .sideTitle {
+  color: var(--ink);
+}
+.sideSell .sideTitle {
+  color: var(--white);
+}
+
+.sideCopy {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 16px;
+  line-height: 1.6;
+}
+/* --muted fails AA on the warm card tint, so secondary copy steps to ink-body. */
+.sideBuy .sideCopy {
+  color: var(--ink-body);
+}
+.sideSell .sideCopy {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.sideCta {
+  margin-top: 10px;
+  height: 46px;
+  padding: 0 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--pill);
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 0.25s var(--ease), box-shadow 0.25s var(--ease),
+    transform 0.25s var(--ease);
+}
+.sideCta:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.sideBuy .sideCta {
+  background: var(--cosora-red);
+  color: var(--white);
+}
+.sideBuy .sideCta:hover {
+  background: var(--cosora-red-dark);
+  box-shadow: 0 6px 22px -4px rgba(var(--cosora-red-rgb), 0.45);
+}
+
+.sideSell .sideCta {
+  background: var(--white);
+  color: var(--cosora-red);
+}
+.sideSell .sideCta:hover {
+  background: var(--paper);
+  box-shadow: 0 6px 22px -4px rgba(0, 0, 0, 0.28);
+}
+
+/* ── Imprint ───────────────────────────────────────────────────────────────── */
+
+.imprint {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 72px 32px 88px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.imprintBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.imprintLabel {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.email {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: lowercase;
+  font-size: clamp(30px, 4.2vw, 52px);
+  line-height: 0.92;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.email:hover {
+  color: var(--cosora-red);
+  text-decoration: none;
+}
+
+.legal {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.socials {
+  display: flex;
+  gap: 10px;
+}
+
+.social {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rule);
+  border-radius: var(--pill);
+  color: var(--ink);
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease),
+    background 0.25s var(--ease);
+}
+.social:hover {
+  color: var(--white);
+  background: var(--cosora-red);
+  border-color: var(--cosora-red);
+  text-decoration: none;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .whyInner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    padding: 64px 32px;
+  }
+  .close {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .statement {
+    padding: 28px 20px 0;
+  }
+  .standfirst {
+    font-size: 18px;
+    padding-bottom: 40px;
+  }
+  .route {
+    padding: 16px 20px 64px;
+  }
+  .stages {
+    gap: 56px;
+  }
+  .stage {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 18px;
+  }
+  .stages::before,
+  .stages::after {
+    left: 19px;
+  }
+  .stageNum {
+    font-size: 24px;
+  }
+  /*
+   * One figure per row at this width, so the values and labels are set as two
+   * real columns. `display: contents` lifts each dt/dd pair into the grid; left
+   * as flex they wrap with ragged label starts and stop reading as a ledger.
+   */
+  .figures {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 10px 20px;
+    align-items: baseline;
+  }
+  .figure {
+    display: contents;
+  }
+  .whyInner {
+    padding: 56px 20px;
+  }
+  .side {
+    padding: 52px 20px;
+  }
+  .imprint {
+    padding: 56px 20px 72px;
+    align-items: flex-start;
+  }
+}

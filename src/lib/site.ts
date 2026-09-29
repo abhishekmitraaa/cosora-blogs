@@ -49,6 +49,30 @@ export const MARKETPLACE = {
   postRfq: `${COSORA_URL}/go/post-rfq`,
   browseProducts: `${COSORA_URL}/search`,
   becomeSeller: `${COSORA_URL}/seller`,
-  about: `${COSORA_URL}/about`,
 } as const;
+
+/** The public contact address, as published on the marketplace. */
+export const CONTACT_EMAIL = 'hello@cosora.in';
+
+/** Registered entity, used in the About imprint and in Organization JSON-LD. */
+export const LEGAL_NAME = 'Cosora Technologies Pvt Ltd';
+
+/** Year Cosora was founded. Stated on the marketplace's own About copy. */
+export const FOUNDED = '2024';
+
+/**
+ * Confirmed social profiles (Mitra, 2026-09-29). These are the `sameAs` set in
+ * Organization JSON-LD, which is how a search engine ties this site, the
+ * marketplace and these accounts into one entity — so they must be the canonical
+ * profile URLs, not share or feed-view links.
+ *
+ * There is no X/Twitter account. YouTube takes that slot; do not add an X link
+ * on the assumption that a B2B brand must have one.
+ */
+export const SOCIALS = [
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/cosora1/' },
+  { label: 'Instagram', href: 'https://www.instagram.com/cosora.in/' },
+  { label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61577687235217' },
+  { label: 'YouTube', href: 'https://www.youtube.com/@Cosora_in' },
+] as const;
 export const POSTS_PER_PAGE = 9;
