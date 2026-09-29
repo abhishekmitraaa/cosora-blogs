@@ -83,7 +83,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <div style={{ width: 72, height: 6, background: '#EF4D62' }} />
+          <div style={{ width: 72, height: 6, background: '#C8102E' }} />
           <div style={{ fontSize: 24, color: '#6b6862' }}>{author}</div>
         </div>
       </div>

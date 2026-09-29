@@ -5,9 +5,13 @@
  */
 :root {
   /* Brand */
-  --cosora-red: #ef4d62;          /* buyer primary / journal accent */
-  --cosora-red-dark: #e62a43;
-  --wordmark-red: #c8102e;        /* matches the COSORA wordmark asset */
+  /* The landing page's single accent, which is also the COSORA wordmark colour.
+     Deliberately NOT the buyer app's #ef4d62: that pink sat next to the deep red
+     logo in the blog header and read as two different brands. */
+  --cosora-red: #c8102e;
+  --cosora-red-dark: #a60d24;     /* hover, same pair the landing page uses */
+  --cosora-red-rgb: 200, 16, 46;  /* for rgba() shadows and tints */
+  --wordmark-red: #c8102e;        /* kept as an alias; same value by design */
   --ink: #262626;                 /* display + headings */
   --ink-body: #363636;            /* body copy */
   --muted: #6b6862;               /* journal muted (warm) */
@@ -76,7 +80,7 @@ img {
 }
 
 ::selection {
-  background: rgba(239, 77, 98, 0.18);
+  background: rgba(var(--cosora-red-rgb), 0.18);
 }
 
 :focus-visible {

@@ -85,7 +85,7 @@
 }
 .cta:hover {
   background: var(--cosora-red-dark);
-  box-shadow: 0 4px 14px -2px rgba(239, 77, 98, 0.45);
+  box-shadow: 0 4px 14px -2px rgba(var(--cosora-red-rgb), 0.45);
   text-decoration: none;
 }
 
