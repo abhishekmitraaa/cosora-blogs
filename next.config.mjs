@@ -8,6 +8,16 @@ const nextConfig = {
   basePath: '/blogs',
   reactStrictMode: true,
   poweredByHeader: false,
+  /**
+   * The share-card routes read public/cosora-logo.png from disk to inline it.
+   * public/ is served from the CDN and is not bundled into serverless
+   * functions, so without this every dynamic card 500'd with ENOENT in
+   * production. (The About card was unaffected only because it is prerendered
+   * at build time, where the file exists.)
+   */
+  outputFileTracingIncludes: {
+    '/**/opengraph-image': ['./public/cosora-logo.png'],
+  },
   images: {
     // Only Supabase Storage. Leaving this open to `**` turns the Next image
     // optimizer into a public image proxy for any origin.
