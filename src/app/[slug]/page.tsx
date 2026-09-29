@@ -7,7 +7,24 @@ import { PostCard } from '@/components/PostCard';
 import { ShareLinks } from '@/components/ShareLinks';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
-import { absoluteUrl, formatDate, imageUrl, isoDate, readTime } from '@/lib/format';
+import {
+  absoluteUrl,
+  formatDate,
+  imageUrl,
+  isoDate,
+  markdownWordCount,
+  readTime,
+  summarise,
+} from '@/lib/format';
+import {
+  blocksFaq,
+  blocksImages,
+  blocksToText,
+  blocksToc,
+  blocksWordCount,
+  renderBlocks,
+} from '@/lib/blocks';
+import { inlineToText } from '@/lib/inlineHtml';
 import { renderMarkdown, stripMarkdown } from '@/lib/markdown';
 import { getAllSlugs, getCategories, getPostBySlug, getRelatedPosts } from '@/lib/posts';
 import { canonical, COSORA_URL, SITE_NAME } from '@/lib/site';
@@ -36,14 +53,19 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   const title = post.seo_title?.trim() || post.title;
   const description =
-    post.seo_description?.trim() || post.excerpt?.trim() || stripMarkdown(post.body, 160);
-  const url = canonical(post.slug);
+    post.seo_description?.trim() ||
+    post.excerpt?.trim() ||
+    summarise(blocksToText(post.blocks)) ||
+    stripMarkdown(post.body, 160);
+  // canonical_url lets an editor point a republished piece at its original.
+  const url = post.canonical_url?.trim() || canonical(post.slug);
   const image = absoluteUrl(post.og_image) ?? absoluteUrl(post.hero_image);
 
   return {
     title: { absolute: `${title} · ${SITE_NAME}` },
     description,
     alternates: { canonical: url },
+    robots: post.noindex ? { index: false, follow: true } : undefined,
     openGraph: {
       type: 'article',
       title,
@@ -73,26 +95,49 @@ export default async function ArticlePage({ params }: Params) {
   const post = await getPostBySlug(slug);
   if (!post) notFound();
 
-  const [categories, related, rendered] = await Promise.all([
+  const hasBlocks = Boolean(post.blocks?.length);
+
+  // Markdown is kept only for posts written before the block editor existed.
+  // Re-saving such a post in Cosora-Admin moves it onto blocks.
+  const [categories, related, markdown] = await Promise.all([
     getCategories(),
     getRelatedPosts(post, 3),
-    renderMarkdown(post.body),
+    hasBlocks ? Promise.resolve(null) : renderMarkdown(post.body),
   ]);
+
+  const toc = hasBlocks ? blocksToc(post.blocks) : (markdown?.toc ?? []);
+  const words = hasBlocks ? blocksWordCount(post.blocks) : markdownWordCount(post.body);
+  const bodyText = hasBlocks ? blocksToText(post.blocks) : stripMarkdown(post.body, 5000);
+  const faqs = blocksFaq(post.blocks);
 
   const hero = imageUrl(post.hero_image);
   const heroAlt = post.hero_image_alt ?? post.title;
-  const url = canonical(post.slug);
-  const time = readTime(post.read_time, post.body);
+  const url = post.canonical_url?.trim() || canonical(post.slug);
+  const time = readTime(post.read_time, words);
   const ogImage = absoluteUrl(post.og_image) ?? absoluteUrl(post.hero_image);
   const categoryHref = post.category ? `/category/${post.category.slug}` : '/';
+
+  // Every image on the page, hero first, so a rich result can pick a crop.
+  const images = [ogImage, ...blocksImages(post.blocks)].filter(
+    (v): v is string => Boolean(v),
+  );
+
+  // A named human author becomes a Person; "Cosora Team" and friends stay an
+  // Organization, which is what they actually are.
+  const authorName = post.author?.trim() || 'Cosora';
+  const authorIsPerson = authorName.includes(' ') && !/cosora/i.test(authorName);
 
   const blogPosting = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
-    description: post.seo_description || post.excerpt || stripMarkdown(post.body, 160),
-    image: ogImage ? [ogImage] : undefined,
-    author: { '@type': 'Organization', name: post.author || 'Cosora' },
+    description:
+      post.seo_description || post.excerpt || summarise(bodyText) || undefined,
+    image: images.length ? images : undefined,
+    author: {
+      '@type': authorIsPerson ? 'Person' : 'Organization',
+      name: authorName,
+    },
     publisher: {
       '@type': 'Organization',
       name: 'Cosora',
@@ -103,8 +148,25 @@ export default async function ArticlePage({ params }: Params) {
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
     url,
     articleSection: post.category?.name,
+    keywords: post.tags?.length ? post.tags.join(', ') : undefined,
+    wordCount: words || undefined,
+    isPartOf: { '@type': 'Blog', '@id': canonical(), name: SITE_NAME },
     inLanguage: 'en-IN',
   };
+
+  // Only emitted when the post actually has an FAQ block. The database caps that
+  // at one per post, because two FAQPage entities on one URL is invalid.
+  const faqPage = faqs.length
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((f) => ({
+          '@type': 'Question',
+          name: f.q,
+          acceptedAnswer: { '@type': 'Answer', text: inlineToText(f.a) },
+        })),
+      }
+    : null;
 
   const breadcrumb = {
     '@context': 'https://schema.org',
@@ -135,6 +197,7 @@ export default async function ArticlePage({ params }: Params) {
     <>
       <JsonLd data={blogPosting} />
       <JsonLd data={breadcrumb} />
+      {faqPage ? <JsonLd data={faqPage} /> : null}
       <SiteHeader categories={categories} />
 
       <main id="main">
@@ -204,13 +267,13 @@ export default async function ArticlePage({ params }: Params) {
         </div>
 
         <div className={styles.columns}>
-          {rendered.toc.length > 2 ? (
+          {toc.length > 2 ? (
             <aside className={styles.toc} aria-labelledby="toc-heading">
               <p id="toc-heading" className={styles.tocHeading}>
                 On this page
               </p>
               <ol className={styles.tocList}>
-                {rendered.toc.map((t) => (
+                {toc.map((t) => (
                   <li key={t.id} className={t.depth === 3 ? styles.tocSub : undefined}>
                     <a href={`#${t.id}`}>{t.label}</a>
                   </li>
@@ -220,13 +283,17 @@ export default async function ArticlePage({ params }: Params) {
           ) : null}
 
           {/*
-            Rendered from Markdown on the server and sanitized in the same pipeline
-            (see lib/markdown.ts). No Markdown parser reaches the browser.
+            Both paths render and sanitize entirely on the server, so neither a
+            Markdown parser nor an HTML sanitizer reaches the browser.
           */}
-          <article
-            className={styles.body}
-            dangerouslySetInnerHTML={{ __html: rendered.html }}
-          />
+          {hasBlocks ? (
+            <article className={styles.body}>{renderBlocks(post.blocks, styles)}</article>
+          ) : (
+            <article
+              className={styles.body}
+              dangerouslySetInnerHTML={{ __html: markdown?.html ?? '' }}
+            />
+          )}
         </div>
 
         {related.length ? (

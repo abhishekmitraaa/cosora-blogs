@@ -2,14 +2,15 @@ import Image from 'next/image';
 // Static import: with basePath set, a string src leaves the optimizer's `url`
 // param unprefixed and the request 404s. A static import resolves correctly.
 import cosoraLogo from '../../public/cosora-logo.png';
-import { COSORA_URL } from '@/lib/site';
+import { MARKETPLACE } from '@/lib/site';
 import styles from './SiteFooter.module.css';
 
+// "Contact" is deliberately absent: textile-spark-net has no /contact route, so
+// the old link 404'd. Add it back when that page exists.
 const LINKS = [
-  { label: 'Browse products', href: `${COSORA_URL}/products` },
-  { label: 'Join as a seller', href: `${COSORA_URL}/sell` },
-  { label: 'About', href: `${COSORA_URL}/about` },
-  { label: 'Contact', href: `${COSORA_URL}/contact` },
+  { label: 'Browse products', href: MARKETPLACE.browseProducts },
+  { label: 'Join as a seller', href: MARKETPLACE.becomeSeller },
+  { label: 'About', href: MARKETPLACE.about },
 ];
 
 export function SiteFooter() {

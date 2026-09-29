@@ -9,8 +9,9 @@ import styles from './PostCard.module.css';
  * give screen readers three links to the same place.
  */
 export function PostCard({ post, priority = false }: { post: Post; priority?: boolean }) {
-  const img = imageUrl(post.hero_image);
-  const time = readTime(post.read_time, null);
+  // Cards prefer the dedicated thumbnail; hero art is often the wrong crop here.
+  const img = imageUrl(post.thumbnail) ?? imageUrl(post.hero_image);
+  const time = readTime(post.read_time);
 
   return (
     <article className={styles.card}>
@@ -19,7 +20,7 @@ export function PostCard({ post, priority = false }: { post: Post; priority?: bo
           {img ? (
             <Image
               src={img}
-              alt={post.hero_image_alt ?? post.title}
+              alt={post.thumbnail_alt ?? post.hero_image_alt ?? post.title}
               fill
               sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
               className={styles.image}

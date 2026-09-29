@@ -1,7 +1,27 @@
 import { supabase } from './supabase';
 import { POSTS_PER_PAGE } from './site';
+import type { Block } from './blocks';
 
-export type Category = { id: string; name: string; slug: string };
+export type Category = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+};
+
+/** Landing-page configuration, authored in Cosora-Admin. */
+export type BlogSettings = {
+  hero_enabled: boolean;
+  hero_image: string | null;
+  hero_image_alt: string | null;
+  hero_eyebrow: string | null;
+  hero_title: string | null;
+  hero_subtitle: string | null;
+  hero_cta_label: string | null;
+  hero_cta_href: string | null;
+};
 
 export type Post = {
   id: string;
@@ -20,6 +40,12 @@ export type Post = {
   seo_description: string | null;
   og_image: string | null;
   read_time: string | null;
+  thumbnail: string | null;
+  thumbnail_alt: string | null;
+  tags: string[] | null;
+  canonical_url: string | null;
+  noindex: boolean;
+  blocks: Block[] | null;
   created_at: string;
   updated_at: string;
   category: Category | null;
@@ -30,10 +56,12 @@ export type Post = {
  * selects every article body pulls the whole blog over the wire to render excerpts.
  */
 const LIST_COLS =
-  'id,title,slug,excerpt,hero_image,hero_image_alt,author,category_id,is_featured,sort_order,' +
-  'published_at,read_time,created_at,updated_at,category:blog_categories(id,name,slug)';
+  'id,title,slug,excerpt,hero_image,hero_image_alt,thumbnail,thumbnail_alt,author,' +
+  'category_id,is_featured,sort_order,published_at,read_time,tags,noindex,' +
+  'created_at,updated_at,' +
+  'category:blog_categories(id,name,slug,description,seo_title,seo_description)';
 
-const FULL_COLS = `${LIST_COLS},body,seo_title,seo_description,og_image`;
+const FULL_COLS = `${LIST_COLS},body,blocks,seo_title,seo_description,og_image,canonical_url`;
 
 /**
  * Supabase types an embedded one-to-one join as an array. Collapse it.
@@ -45,33 +73,55 @@ function normalize(row: Record<string, unknown>): Post {
 }
 
 /**
- * The RLS policy already restricts reads to published, past-dated rows, so these
- * filters are redundant at the database level. They are here so the intent is
- * readable in the query and so ordering/pagination is computed on the same
- * predicate the policy enforces.
+ * Mirrors the RLS policy exactly so ordering and pagination are computed on the
+ * same predicate the database enforces.
+ *
+ * 'scheduled' is included on purpose: a scheduled post becomes live the moment
+ * its published_at passes, with no job to flip a flag. Filtering on
+ * status = 'published' alone would hide those rows even though the policy
+ * exposes them.
  */
+const LIVE_STATUSES = ['published', 'scheduled'];
+
 function liveQuery(cols: string) {
   return supabase
     .from('blog_posts')
     .select(cols, { count: 'exact' })
-    .eq('status', 'published')
+    .in('status', LIVE_STATUSES)
     .not('published_at', 'is', null)
     .lte('published_at', new Date().toISOString());
 }
 
+const CATEGORY_COLS = 'id,name,slug,description,seo_title,seo_description';
+
 export async function getCategories(): Promise<Category[]> {
   const { data, error } = await supabase
     .from('blog_categories')
-    .select('id,name,slug')
+    .select(CATEGORY_COLS)
+    .order('sort_order')
     .order('name');
   if (error) throw new Error(`getCategories: ${error.message}`);
   return (data ?? []) as Category[];
 }
 
+/** Landing-page hero. Returns null when nothing is configured or enabled. */
+export async function getBlogSettings(): Promise<BlogSettings | null> {
+  const { data, error } = await supabase
+    .from('blog_settings')
+    .select(
+      'hero_enabled,hero_image,hero_image_alt,hero_eyebrow,hero_title,hero_subtitle,' +
+        'hero_cta_label,hero_cta_href',
+    )
+    .maybeSingle();
+  if (error) throw new Error(`getBlogSettings: ${error.message}`);
+  const row = data as BlogSettings | null;
+  return row?.hero_enabled ? row : null;
+}
+
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   const { data, error } = await supabase
     .from('blog_categories')
-    .select('id,name,slug')
+    .select(CATEGORY_COLS)
     .eq('slug', slug)
     .maybeSingle();
   if (error) throw new Error(`getCategoryBySlug(${slug}): ${error.message}`);
@@ -98,7 +148,7 @@ async function countPosts(categoryId?: string, excludeId?: string): Promise<numb
   let q = supabase
     .from('blog_posts')
     .select('id', { count: 'exact', head: true })
-    .eq('status', 'published')
+    .in('status', LIVE_STATUSES)
     .not('published_at', 'is', null)
     .lte('published_at', new Date().toISOString());
   if (categoryId) q = q.eq('category_id', categoryId);

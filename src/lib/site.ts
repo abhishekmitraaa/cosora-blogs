@@ -35,4 +35,20 @@ export const SITE_TAGLINE =
 
 /** Marketing site links. Absolute — these leave this app. */
 export const COSORA_URL = PUBLIC_BASE_URL;
+
+/**
+ * Outbound links into the marketplace. Every one of these is a real route in
+ * textile-spark-net, checked against its router: the previous set pointed at
+ * /rfq/new, /sell and /contact, none of which exist, so all three 404'd.
+ *
+ * POST_RFQ is a dispatcher: it reads the session on the main app and sends a
+ * signed-in buyer to the RFQ form, a signed-in vendor to their dashboard, and a
+ * signed-out visitor to the landing page. The blog stays stateless.
+ */
+export const MARKETPLACE = {
+  postRfq: `${COSORA_URL}/go/post-rfq`,
+  browseProducts: `${COSORA_URL}/search`,
+  becomeSeller: `${COSORA_URL}/seller`,
+  about: `${COSORA_URL}/about`,
+} as const;
 export const POSTS_PER_PAGE = 9;

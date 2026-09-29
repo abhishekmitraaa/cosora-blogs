@@ -48,10 +48,28 @@ export function isoDate(iso: string | null | undefined): string | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
 }
 
-/** Prefer the stored read_time, else estimate from the body at ~200 wpm. */
-export function readTime(stored: string | null, body: string | null): string {
+/**
+ * Prefer the stored read_time, else estimate from a word count at ~200 wpm.
+ *
+ * Takes a count rather than the body text because a block-authored post has no
+ * `body` at all: deriving it from the body would silently return nothing for
+ * every post written in the new editor.
+ */
+export function readTime(stored: string | null, words = 0): string {
   if (stored && stored.trim()) return stored.trim();
-  if (!body) return '';
-  const words = body.trim().split(/\s+/).length;
+  if (!words) return '';
   return `${Math.max(1, Math.round(words / 200))} min read`;
+}
+
+/** Word count of a Markdown body, for the legacy rendering path. */
+export function markdownWordCount(body: string | null): number {
+  return body?.trim() ? body.trim().split(/\s+/).length : 0;
+}
+
+/** Trim text to a meta-description length on a word boundary. */
+export function summarise(text: string, max = 155): string {
+  const t = (text ?? '').replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  if (t.length <= max) return t;
+  return `${t.slice(0, max).replace(/\s+\S*$/, '')}…`;
 }

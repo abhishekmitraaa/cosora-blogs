@@ -7,13 +7,16 @@ import { PostCard } from './PostCard';
 import { SiteFooter } from './SiteFooter';
 import { SiteHeader } from './SiteHeader';
 import {
+  getBlogSettings,
   getCategories,
   getCategoryBySlug,
   getFeaturedPost,
   getPosts,
   type Category,
 } from '@/lib/posts';
-import { canonical, COSORA_URL, SITE_NAME, SITE_TAGLINE } from '@/lib/site';
+import { canonical, COSORA_URL, MARKETPLACE, SITE_NAME, SITE_TAGLINE } from '@/lib/site';
+import Image from 'next/image';
+import { imageUrl } from '@/lib/format';
 import styles from './ListingView.module.css';
 
 const MONTH = new Intl.DateTimeFormat('en-GB', {
@@ -35,6 +38,9 @@ export async function ListingView({
   page: number;
 }) {
   const categories = await getCategories();
+  // Landing hero, authored in Cosora-Admin. Only on page 1 of the unfiltered list.
+  const settings = categorySlug === null && page === 1 ? await getBlogSettings() : null;
+  const heroImage = imageUrl(settings?.hero_image);
 
   let category: Category | null = null;
   if (categorySlug) {
@@ -83,6 +89,40 @@ export async function ListingView({
       <SiteHeader categories={categories} />
 
       <main id="main">
+        {settings && heroImage ? (
+          <section className={styles.heroBanner} aria-labelledby="hero-banner-heading">
+            <div className={styles.heroBannerFrame}>
+              <Image
+                src={heroImage}
+                alt={settings.hero_image_alt ?? ''}
+                fill
+                sizes="100vw"
+                priority
+                className={styles.heroBannerImage}
+              />
+              <div className={styles.heroBannerScrim} />
+              <div className={styles.heroBannerBody}>
+                {settings.hero_eyebrow ? (
+                  <p className={styles.heroBannerEyebrow}>{settings.hero_eyebrow}</p>
+                ) : null}
+                {settings.hero_title ? (
+                  <p id="hero-banner-heading" className={styles.heroBannerTitle}>
+                    {settings.hero_title}
+                  </p>
+                ) : null}
+                {settings.hero_subtitle ? (
+                  <p className={styles.heroBannerSubtitle}>{settings.hero_subtitle}</p>
+                ) : null}
+                {settings.hero_cta_label && settings.hero_cta_href ? (
+                  <a className={styles.heroBannerCta} href={settings.hero_cta_href}>
+                    {settings.hero_cta_label}
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         {/* Masthead */}
         <section className={styles.masthead}>
           <div className={styles.rule}>
@@ -143,7 +183,7 @@ export async function ListingView({
               Post a Quick RFQ with an image and a quantity. Verified manufacturers send you
               quotes to compare.
             </p>
-            <a className={styles.ctaButton} href={`${COSORA_URL}/rfq/new`}>
+            <a className={styles.ctaButton} href={MARKETPLACE.postRfq}>
               Post RFQ <span aria-hidden="true">→</span>
             </a>
           </div>

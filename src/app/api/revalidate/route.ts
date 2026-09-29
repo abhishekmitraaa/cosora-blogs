@@ -1,5 +1,6 @@
 import { revalidatePath } from 'next/cache';
 import { NextResponse, type NextRequest } from 'next/server';
+import { BASE_PATH, PUBLIC_BASE_URL } from '@/lib/site';
 
 /**
  * ISR revalidation hook, called by a Supabase Database Webhook on
@@ -71,11 +72,53 @@ export async function POST(request: NextRequest) {
   );
   for (const slug of slugs) purge(`/${slug}`);
 
+  // Tell the IndexNow engines (Bing, Yandex, Naver, Seznam) directly. Google is
+  // not an IndexNow consumer and is covered by the sitemap instead.
+  //
+  // Both slugs are submitted on a rename, so the dead URL gets recrawled to its
+  // 404 rather than lingering in the index.
+  const indexNow = await pingIndexNow([...slugs]);
+
   return NextResponse.json({
     revalidated: true,
     paths: revalidated,
+    indexNow,
     now: new Date().toISOString(),
   });
+}
+
+/**
+ * Submits changed URLs to IndexNow. Never throws: a search-engine ping must not
+ * be able to fail an ISR purge, which is the part that actually keeps the site
+ * correct.
+ *
+ * The key file is served from this app at /blogs/<key>.txt. A non-root
+ * keyLocation authorises only URLs beneath its own directory, and every URL here
+ * is under /blogs/, so that is both valid and self-contained.
+ */
+async function pingIndexNow(slugs: string[]): Promise<string> {
+  const key = process.env.INDEXNOW_KEY;
+  if (!key) return 'skipped: no INDEXNOW_KEY';
+  if (!slugs.length) return 'skipped: no slugs';
+
+  const host = new URL(PUBLIC_BASE_URL).host;
+  const payload = {
+    host,
+    key,
+    keyLocation: `${PUBLIC_BASE_URL}${BASE_PATH}/${key}.txt`,
+    urlList: slugs.map((s) => `${PUBLIC_BASE_URL}${BASE_PATH}/${s}`),
+  };
+
+  try {
+    const res = await fetch('https://api.indexnow.org/IndexNow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify(payload),
+    });
+    return `${res.status}`;
+  } catch (err) {
+    return `failed: ${err instanceof Error ? err.message : 'unknown'}`;
+  }
 }
 
 /** Health check so the webhook URL can be verified from a browser. */

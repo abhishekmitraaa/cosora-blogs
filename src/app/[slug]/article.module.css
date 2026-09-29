@@ -408,3 +408,181 @@
     font-size: 16px;
   }
 }
+
+/* ── Block-authored article bodies ──────────────────────────────────────────
+   Headings, paragraphs, lists, tables, quotes and rules reuse the rules above,
+   because the block renderer emits the same semantic elements the Markdown
+   pipeline did. Only the blocks with no Markdown equivalent need styling here. */
+
+/* The two font-size steps the editor can apply. Named, not arbitrary: a px
+   picker would let an editor fake a heading with big text and cost the page its
+   heading hierarchy. :global because the class arrives inside sanitized HTML. */
+.body :global(.blog-lead) {
+  font-size: 1.125em;
+  line-height: 1.6;
+}
+.body :global(.blog-small) {
+  font-size: 0.875em;
+}
+
+/* Underline is available because it was asked for, but on the web an underline
+   reads as a link. Links are red and thicker, so the two stay distinguishable. */
+.body u {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  color: inherit;
+}
+.body a {
+  text-decoration-thickness: 2px;
+}
+
+.blockFigure {
+  margin: 28px 0;
+}
+
+.blockImageFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card);
+}
+.blockImageFrame img {
+  object-fit: cover;
+}
+
+.blockFigure figcaption {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--muted-cool);
+}
+
+/* Native <details>: no JavaScript, and the answer text sits in the DOM whether
+   or not it is open, so it stays crawlable. */
+.faq {
+  margin: 28px 0;
+  border-top: 1px solid var(--rule-cool);
+}
+.faq details {
+  border-bottom: 1px solid var(--rule-cool);
+}
+.faq summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 18px 0;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--ink);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary::after {
+  content: '+';
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--pill);
+  background: var(--surface-sunken);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: transform 0.3s var(--ease), background 0.3s var(--ease);
+}
+.faq details[open] summary::after {
+  content: '+';
+  transform: rotate(45deg);
+  background: var(--cosora-red);
+  color: var(--white);
+}
+.faq details > div {
+  padding: 0 44px 20px 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted-cool);
+}
+
+.pullQuote {
+  margin: 32px 0;
+}
+.pullQuote blockquote {
+  margin: 0;
+}
+.pullQuote figcaption {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted-cool);
+}
+
+/* The blog exists to feed the marketplace, so an in-body CTA is a first-class
+   block rather than decoration. */
+.blockCta {
+  margin: 28px 0;
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.blockCtaHeading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.blockCtaBody {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted-cool);
+}
+/* Scoped under .body on purpose: the generic `.body a` rule is more specific
+   than a bare class, so without this the label renders red on red. */
+.body .blockCtaButton,
+.blockCtaButton {
+  flex: none;
+  margin-left: auto;
+  height: 40px;
+  padding: 0 20px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--pill);
+  background: var(--cosora-red);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.body .blockCtaButton:hover,
+.blockCtaButton:hover {
+  background: var(--cosora-red-dark);
+  color: var(--white);
+  text-decoration: none;
+}
+
+.body caption {
+  caption-side: top;
+  text-align: left;
+  padding: 0 0 8px;
+  font-size: 13px;
+  color: var(--muted-cool);
+}
+
+@media (max-width: 720px) {
+  .blockCtaButton {
+    margin-left: 0;
+  }
+}

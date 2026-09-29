@@ -4,7 +4,7 @@ import Image from 'next/image';
 import cosoraLogo from '../../public/cosora-logo.png';
 import Link from 'next/link';
 import type { Category } from '@/lib/posts';
-import { COSORA_URL } from '@/lib/site';
+import { MARKETPLACE } from '@/lib/site';
 import styles from './SiteHeader.module.css';
 
 export function SiteHeader({ categories }: { categories: Category[] }) {
@@ -32,7 +32,7 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
           ))}
         </nav>
 
-        <a className={styles.cta} href={`${COSORA_URL}/rfq/new`}>
+        <a className={styles.cta} href={MARKETPLACE.postRfq}>
           Post RFQ
         </a>
       </div>

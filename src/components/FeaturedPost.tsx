@@ -9,8 +9,9 @@ import styles from './FeaturedPost.module.css';
  * card — this is the "larger first card" the listing spec calls for.
  */
 export function FeaturedPost({ post }: { post: Post }) {
-  const img = imageUrl(post.hero_image);
-  const time = readTime(post.read_time, null);
+  // Cards prefer the dedicated thumbnail; hero art is often the wrong crop here.
+  const img = imageUrl(post.thumbnail) ?? imageUrl(post.hero_image);
+  const time = readTime(post.read_time);
 
   return (
     <section className={styles.section} aria-labelledby="featured-heading">
@@ -20,7 +21,7 @@ export function FeaturedPost({ post }: { post: Post }) {
           {img ? (
             <Image
               src={img}
-              alt={post.hero_image_alt ?? post.title}
+              alt={post.thumbnail_alt ?? post.hero_image_alt ?? post.title}
               fill
               sizes="(max-width: 1000px) 100vw, 55vw"
               className={styles.image}

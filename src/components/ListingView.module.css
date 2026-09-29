@@ -186,3 +186,98 @@
     margin-top: 56px;
   }
 }
+
+/* ── Admin-authored hero banner ──────────────────────────────────────────────
+   Renders above the masthead, on page one of the unfiltered listing only.
+   Absent entirely unless an admin has enabled it and given it an image, so the
+   default page is unchanged. */
+.heroBanner {
+  max-width: var(--content-max);
+  margin: 24px auto 0;
+  padding: 0 32px;
+}
+
+.heroBannerFrame {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--card);
+  min-height: clamp(260px, 32vw, 420px);
+  display: flex;
+  align-items: flex-end;
+}
+
+.heroBannerImage {
+  object-fit: cover;
+}
+
+.heroBannerScrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.15) 55%, transparent);
+  pointer-events: none;
+}
+
+.heroBannerBody {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 32px;
+  max-width: 640px;
+  color: var(--white);
+}
+
+.heroBannerEyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.heroBannerTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: clamp(32px, 4.4vw, 56px);
+  line-height: 0.92;
+  color: var(--white);
+}
+
+.heroBannerSubtitle {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.heroBannerCta {
+  align-self: flex-start;
+  margin-top: 8px;
+  height: 42px;
+  padding: 0 22px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--pill);
+  background: var(--cosora-red);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 700;
+}
+.heroBannerCta:hover {
+  background: var(--cosora-red-dark);
+  text-decoration: none;
+}
+
+@media (max-width: 720px) {
+  .heroBanner {
+    padding: 0 20px;
+  }
+  .heroBannerBody {
+    padding: 22px;
+  }
+}
