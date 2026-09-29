@@ -42,7 +42,7 @@ export function FeaturedPost({ post }: { post: Post }) {
           </h2>
           {post.excerpt ? <p className={styles.excerpt}>{post.excerpt}</p> : null}
           <p className={styles.byline}>
-            {post.author ? <span>{post.author}</span> : null}
+            {post.author ? <span>{post.author.name}</span> : null}
             {post.author && post.published_at ? <span aria-hidden="true"> · </span> : null}
             {post.published_at ? (
               <time dateTime={isoDate(post.published_at)}>{formatDate(post.published_at)}</time>

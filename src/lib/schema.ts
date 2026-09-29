@@ -27,6 +27,13 @@ export const ORG_DESCRIPTION =
   'Post a requirement once, compare quotes from verified manufacturers, and keep the ' +
   'order in one thread.';
 
+export const ORG_LOGO = {
+  '@type': 'ImageObject',
+  url: `${COSORA_URL}/blogs/cosora-logo.png`,
+  width: 420,
+  height: 86,
+};
+
 /** The publisher behind both the marketplace and this Journal. */
 export function organizationSchema() {
   return {
@@ -36,12 +43,7 @@ export function organizationSchema() {
     name: 'Cosora',
     legalName: LEGAL_NAME,
     url: COSORA_URL,
-    logo: {
-      '@type': 'ImageObject',
-      url: `${COSORA_URL}/blogs/cosora-logo.png`,
-      width: 420,
-      height: 86,
-    },
+    logo: ORG_LOGO,
     description: ORG_DESCRIPTION,
     foundingDate: FOUNDED,
     email: CONTACT_EMAIL,

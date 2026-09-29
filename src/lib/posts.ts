@@ -11,6 +11,26 @@ export type Category = {
   seo_description: string | null;
 };
 
+/**
+ * The byline behind a post: one of the named people, or Cosora itself. Rows live
+ * in public.authors and are chosen per post in Cosora-Admin.
+ *
+ * Nothing here is written by this app. A person has no bio unless one is stored,
+ * and the Journal must never pad one out: the byline is name and role.
+ */
+export type Author = {
+  id: string;
+  slug: string;
+  name: string;
+  entity_type: 'person' | 'organization';
+  role: string | null;
+  linkedin_url: string | null;
+  website_url: string | null;
+  avatar_url: string | null;
+  logo_url: string | null;
+  description: string | null;
+};
+
 /** Landing-page configuration, authored in Cosora-Admin. */
 export type BlogSettings = {
   hero_enabled: boolean;
@@ -31,7 +51,9 @@ export type Post = {
   body: string | null;
   hero_image: string | null;
   hero_image_alt: string | null;
-  author: string | null;
+  author_id: string | null;
+  /** Null only for a post saved without one; read it through postAuthor(). */
+  author: Author | null;
   category_id: string | null;
   is_featured: boolean;
   sort_order: number;
@@ -55,21 +77,31 @@ export type Post = {
  * Columns for list views. `body` is deliberately excluded — a listing page that
  * selects every article body pulls the whole blog over the wire to render excerpts.
  */
+const AUTHOR_COLS =
+  'id,slug,name,entity_type,role,linkedin_url,website_url,avatar_url,logo_url,description';
+
 const LIST_COLS =
-  'id,title,slug,excerpt,hero_image,hero_image_alt,thumbnail,thumbnail_alt,author,' +
+  'id,title,slug,excerpt,hero_image,hero_image_alt,thumbnail,thumbnail_alt,author_id,' +
   'category_id,is_featured,sort_order,published_at,read_time,tags,noindex,' +
   'created_at,updated_at,' +
-  'category:blog_categories(id,name,slug,description,seo_title,seo_description)';
+  'category:blog_categories(id,name,slug,description,seo_title,seo_description),' +
+  `author:authors(${AUTHOR_COLS})`;
 
 const FULL_COLS = `${LIST_COLS},body,blocks,seo_title,seo_description,og_image,canonical_url`;
 
 /**
  * Supabase types an embedded one-to-one join as an array. Collapse it.
  */
+function one<T>(raw: unknown): T | null {
+  return ((Array.isArray(raw) ? raw[0] : raw) as T | null | undefined) ?? null;
+}
+
 function normalize(row: Record<string, unknown>): Post {
-  const raw = row.category;
-  const category = (Array.isArray(raw) ? raw[0] : raw) as Category | null | undefined;
-  return { ...(row as object), category: category ?? null } as Post;
+  return {
+    ...(row as object),
+    category: one<Category>(row.category),
+    author: one<Author>(row.author),
+  } as Post;
 }
 
 /**
@@ -251,4 +283,50 @@ export async function getRelatedPosts(post: Post, limit = 3): Promise<Post[]> {
   }
 
   return collected.slice(0, limit);
+}
+
+// ── Authors ─────────────────────────────────────────────────────────────────
+
+/**
+ * The organisation row. A post with no author_id is read as Cosora's, which is
+ * what the old free-text "Cosora Team" byline meant.
+ */
+export const DEFAULT_AUTHOR_SLUG = 'cosora';
+
+export async function getAuthors(): Promise<Author[]> {
+  const { data, error } = await supabase.from('authors').select(AUTHOR_COLS).order('name');
+  if (error) throw new Error(`getAuthors: ${error.message}`);
+  return (data ?? []) as Author[];
+}
+
+export async function getAuthorBySlug(slug: string): Promise<Author | null> {
+  const { data, error } = await supabase
+    .from('authors')
+    .select(AUTHOR_COLS)
+    .eq('slug', slug)
+    .maybeSingle();
+  if (error) throw new Error(`getAuthorBySlug(${slug}): ${error.message}`);
+  return (data as Author) ?? null;
+}
+
+/** The post's author, falling back to Cosora for a post saved without one. */
+export async function postAuthor(post: Post): Promise<Author | null> {
+  return post.author ?? getAuthorBySlug(DEFAULT_AUTHOR_SLUG);
+}
+
+/**
+ * Every live post by one author, newest first. Unpaginated: at the Journal's
+ * pace this stays one screen for years, and the cap keeps a runaway count from
+ * turning into one enormous page. Posts with no author_id count as Cosora's,
+ * matching postAuthor().
+ */
+export async function getPostsByAuthor(author: Author, limit = 60): Promise<Post[]> {
+  let q = liveQuery(LIST_COLS);
+  q =
+    author.slug === DEFAULT_AUTHOR_SLUG
+      ? q.or(`author_id.eq.${author.id},author_id.is.null`)
+      : q.eq('author_id', author.id);
+  const { data, error } = await q.order('published_at', { ascending: false }).limit(limit);
+  if (error) throw new Error(`getPostsByAuthor(${author.slug}): ${error.message}`);
+  return ((data ?? []) as unknown as Record<string, unknown>[]).map(normalize);
 }

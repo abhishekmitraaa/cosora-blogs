@@ -27,7 +27,21 @@ import {
 } from '@/lib/blocks';
 import { inlineToText } from '@/lib/inlineHtml';
 import { renderMarkdown, stripMarkdown } from '@/lib/markdown';
-import { getAllSlugs, getCategories, getPostBySlug, getRelatedPosts } from '@/lib/posts';
+import {
+  authorPath,
+  authorRoleLine,
+  authorUrl,
+  bylineSchema,
+  isCosora,
+} from '@/lib/authors';
+import {
+  getAllSlugs,
+  getCategories,
+  getPostBySlug,
+  getRelatedPosts,
+  postAuthor,
+} from '@/lib/posts';
+import { ORG_ID } from '@/lib/schema';
 import { canonical, COSORA_URL, SITE_NAME } from '@/lib/site';
 import styles from './article.module.css';
 
@@ -38,7 +52,7 @@ export const revalidate = 3600;
  * slug collides with one would be unreachable. Skip them at build rather than
  * emitting a route that silently resolves to the listing.
  */
-const RESERVED = new Set(['category', 'page', 'api', 'about']);
+const RESERVED = new Set(['category', 'page', 'api', 'about', 'authors']);
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -51,6 +65,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) return { title: 'Article not found' };
+  const author = await postAuthor(post);
 
   const title = post.seo_title?.trim() || post.title;
   const description =
@@ -76,6 +91,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: { absolute: `${title} · ${SITE_NAME}` },
     description,
     alternates: { canonical: url },
+    // <meta name="author"> plus <link rel="author"> to the author page.
+    authors: author ? [{ name: author.name, url: authorUrl(author) }] : undefined,
     robots: post.noindex ? { index: false, follow: true } : undefined,
     openGraph: {
       type: 'article',
@@ -85,7 +102,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       siteName: SITE_NAME,
       publishedTime: isoDate(post.published_at),
       modifiedTime: isoDate(post.updated_at),
-      authors: post.author ? [post.author] : undefined,
+      // article:author wants a profile URL, not a name.
+      authors: author ? [authorUrl(author)] : undefined,
       images: image
         ? [{ url: image, alt: post.hero_image_alt ?? post.title, width: 1200, height: 630 }]
         : undefined,
@@ -110,10 +128,11 @@ export default async function ArticlePage({ params }: Params) {
 
   // Markdown is kept only for posts written before the block editor existed.
   // Re-saving such a post in Cosora-Admin moves it onto blocks.
-  const [categories, related, markdown] = await Promise.all([
+  const [categories, related, markdown, author] = await Promise.all([
     getCategories(),
     getRelatedPosts(post, 3),
     hasBlocks ? Promise.resolve(null) : renderMarkdown(post.body),
+    postAuthor(post),
   ]);
 
   const toc = hasBlocks ? blocksToc(post.blocks) : (markdown?.toc ?? []);
@@ -133,10 +152,10 @@ export default async function ArticlePage({ params }: Params) {
     (v): v is string => Boolean(v),
   );
 
-  // A named human author becomes a Person; "Cosora Team" and friends stay an
-  // Organization, which is what they actually are.
-  const authorName = post.author?.trim() || 'Cosora';
-  const authorIsPerson = authorName.includes(' ') && !/cosora/i.test(authorName);
+  // Straight from the linked authors row: Person for a named person,
+  // Organization for Cosora. No guessing from the name.
+  const roleLine = author ? authorRoleLine(author) : null;
+  const authorAvatar = author ? imageUrl(author.avatar_url ?? author.logo_url) : null;
 
   const blogPosting = {
     '@context': 'https://schema.org',
@@ -145,12 +164,10 @@ export default async function ArticlePage({ params }: Params) {
     description:
       post.seo_description || post.excerpt || summarise(bodyText) || undefined,
     image: images.length ? images : undefined,
-    author: {
-      '@type': authorIsPerson ? 'Person' : 'Organization',
-      name: authorName,
-    },
+    author: bylineSchema(author),
     publisher: {
       '@type': 'Organization',
+      '@id': ORG_ID,
       name: 'Cosora',
       logo: { '@type': 'ImageObject', url: `${COSORA_URL}/blogs/cosora-logo.png` },
     },
@@ -238,13 +255,33 @@ export default async function ArticlePage({ params }: Params) {
 
             <div className={styles.byline}>
               <div className={styles.author}>
-                {/* The real wordmark, not a letter in a coloured circle: the
-                    byline is the organisation, so an avatar is the wrong mark. */}
-                <span className={styles.publisherMark}>
-                  <Image src={cosoraLogo} alt="Cosora" width={72} height={15} />
-                </span>
+                {/* Cosora gets the real wordmark, not a letter in a coloured
+                    circle. A person shows a photo only if one is stored; there
+                    is no stand-in avatar. */}
+                {!author || isCosora(author) ? (
+                  <span className={styles.publisherMark}>
+                    <Image src={cosoraLogo} alt="" width={72} height={15} />
+                  </span>
+                ) : authorAvatar ? (
+                  <Image
+                    src={authorAvatar}
+                    alt=""
+                    width={40}
+                    height={40}
+                    className={styles.avatar}
+                  />
+                ) : null}
                 <div className={styles.authorText}>
-                  <span className={styles.authorName}>{post.author || 'Cosora Team'}</span>
+                  <span className={styles.authorName}>
+                    {author ? (
+                      <Link href={authorPath(author)} rel="author">
+                        {author.name}
+                      </Link>
+                    ) : (
+                      'Cosora'
+                    )}
+                    {roleLine ? <span className={styles.authorRole}>, {roleLine}</span> : null}
+                  </span>
                   <span className={styles.authorMeta}>
                     {post.published_at ? (
                       <time dateTime={isoDate(post.published_at)}>

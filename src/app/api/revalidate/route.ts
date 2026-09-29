@@ -4,14 +4,15 @@ import { BASE_PATH, PUBLIC_BASE_URL } from '@/lib/site';
 
 /**
  * ISR revalidation hook, called by database triggers on INSERT/UPDATE/DELETE of
- * public.blog_posts (trg_blog_posts_revalidate) and public.blog_categories
- * (trg_blog_categories_revalidate), both in textile-spark-net's migrations.
+ * public.blog_posts (trg_blog_posts_revalidate), public.blog_categories
+ * (trg_blog_categories_revalidate) and public.authors (trg_authors_revalidate),
+ * all in textile-spark-net's migrations.
  *
- * A post change purges the listing routes plus the affected article, so a newly
- * published (or unpublished, or re-slugged) post appears without a redeploy. Both
- * the old and new slug are purged on UPDATE, otherwise a renamed post leaves a
- * stale page behind. A category change purges the whole app, because category
- * names appear on every page.
+ * A post change purges the listing routes, the author pages and the affected
+ * article, so a newly published (or unpublished, re-slugged or reassigned) post
+ * appears without a redeploy. Both the old and new slug are purged on UPDATE,
+ * otherwise a renamed post leaves a stale page behind. A category or author
+ * change purges the whole app, because both names appear on every page.
  */
 export const dynamic = 'force-dynamic';
 
@@ -79,12 +80,19 @@ export async function POST(request: NextRequest) {
     // which is also what makes a renamed category's old URL start 404ing.
     purge('/', 'layout');
     changed = [...slugs].map((s) => `category/${s}`);
+  } else if (body.table === 'authors') {
+    // Same reasoning: an author's name and role are on every card and byline.
+    purge('/', 'layout');
+    changed = [...slugs].map((s) => `authors/${s}`);
   } else {
     // Listings always change when any post changes: ordering, counts, pagination.
     purge('/');
     purge('/page/[page]', 'page');
     purge('/category/[category]', 'page');
     purge('/category/[category]/page/[page]', 'page');
+    // A post's author page lists it, and flips from noindex to indexed on the
+    // first one. Every author page, since the old author also loses the post.
+    purge('/authors/[slug]', 'page');
     for (const slug of slugs) purge(`/${slug}`);
     changed = [...slugs];
   }

@@ -2,25 +2,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ImageResponse } from 'next/og';
 import { authorRoleLine } from '@/lib/authors';
-import { getPostBySlug } from '@/lib/posts';
+import { getAuthorBySlug } from '@/lib/posts';
 import { SITE_NAME } from '@/lib/site';
 
 /**
- * Generated social card, one per article.
- *
- * This is the automatic half of "meta tags are optimised when a post is
- * published": an editor never has to make or upload a share image, and the card
- * stays correct when the title is edited, which a generate-and-upload approach
- * in the admin could not do without re-rendering.
- *
- * generateMetadata sets openGraph.images only when og_image or hero_image is
- * populated, so Next falls back to this route for every other post.
- */
-/**
- * The real wordmark, inlined as a data URI. ImageResponse cannot resolve a
- * relative asset path at render time, and fetching it over the network would
- * make the card depend on the site being reachable from inside its own build.
- * Read once at module scope.
+ * Share card for an author page. Same grammar as the article and About cards:
+ * paper ground, real wordmark, red rule. It carries the name and role only,
+ * the same facts the page states, and nothing written for the occasion.
  */
 const LOGO = `data:image/png;base64,${fs
   .readFileSync(path.join(process.cwd(), 'public', 'cosora-logo.png'))
@@ -32,16 +20,10 @@ export const alt = SITE_NAME;
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug).catch(() => null);
+  const author = await getAuthorBySlug(slug).catch(() => null);
 
-  const title = post?.title ?? SITE_NAME;
-  const category = post?.category?.name ?? 'Journal';
-  const author = post?.author
-    ? [post.author.name, authorRoleLine(post.author)].filter(Boolean).join(', ')
-    : 'Cosora';
-
-  // Long headlines step down rather than overflow the card.
-  const fontSize = title.length > 90 ? 52 : title.length > 55 ? 64 : 76;
+  const name = author?.name ?? SITE_NAME;
+  const role = author ? authorRoleLine(author) : null;
 
   return new ImageResponse(
     (
@@ -69,28 +51,31 @@ export default async function Image({ params }: { params: Promise<{ slug: string
               color: '#6b6862',
             }}
           >
-            {category}
+            Author
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div
             style={{
-              fontSize,
+              display: 'flex',
+              fontSize: 96,
               fontWeight: 700,
-              lineHeight: 1.1,
+              lineHeight: 1.04,
               letterSpacing: '-0.02em',
               color: '#262626',
-              display: 'flex',
             }}
           >
-            {title}
+            {name}
           </div>
+          {role ? (
+            <div style={{ display: 'flex', fontSize: 36, color: '#6b6862' }}>{role}</div>
+          ) : null}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <div style={{ width: 72, height: 6, background: '#C8102E' }} />
-          <div style={{ fontSize: 24, color: '#6b6862' }}>{author}</div>
+          <div style={{ fontSize: 24, color: '#6b6862' }}>{SITE_NAME}</div>
         </div>
       </div>
     ),

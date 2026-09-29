@@ -1,0 +1,90 @@
+/* Author page. The masthead, intro and grid come from ListingView.module.css so
+   this reads as one more Journal listing; only the identity row is its own. */
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  font-size: 13px;
+  color: var(--muted-cool);
+}
+.crumbs a {
+  color: var(--muted-cool);
+}
+.crumbs a:hover {
+  color: var(--cosora-red);
+  text-decoration: none;
+}
+
+.chevron {
+  color: #9ca3af;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  margin-top: 28px;
+}
+
+/* Smaller than the listing title: a name runs longer than "Journal" or a
+   category, and the listing's 176px would break "Abhishek Mitra" on desktop. */
+.name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: clamp(48px, 9vw, 128px);
+  line-height: 0.86;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.photo {
+  width: 88px;
+  height: 88px;
+  border-radius: var(--pill);
+  object-fit: cover;
+}
+
+.logo {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.link {
+  height: 44px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--rule);
+  border-radius: var(--pill);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease),
+    background 0.25s var(--ease);
+}
+.link:hover {
+  color: var(--white);
+  background: var(--cosora-red);
+  border-color: var(--cosora-red);
+  text-decoration: none;
+}
+.link:focus-visible {
+  outline: 2px solid var(--cosora-red);
+  outline-offset: 3px;
+}

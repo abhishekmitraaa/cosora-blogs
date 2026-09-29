@@ -104,6 +104,33 @@
   color: var(--ink);
 }
 
+.authorName a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--faint);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s var(--ease);
+}
+.authorName a:hover {
+  text-decoration-color: currentColor;
+}
+
+/* "CEO, Cosora" rides on the name line at a lighter weight, so the byline
+   reads as one phrase: Anandita Mitra, CEO, Cosora. */
+.authorRole {
+  font-weight: 400;
+  color: var(--muted-cool);
+}
+
+/* Only rendered when an author has a stored photo. */
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--pill);
+  object-fit: cover;
+  flex: none;
+}
+
 .authorMeta {
   font-size: 12px;
   color: var(--muted-cool);

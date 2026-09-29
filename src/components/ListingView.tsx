@@ -16,6 +16,7 @@ import {
 } from '@/lib/posts';
 import { canonical, COSORA_URL, MARKETPLACE, SITE_NAME, SITE_TAGLINE } from '@/lib/site';
 import { ORG_ID, organizationSchema, SITE_ID, websiteSchema } from '@/lib/schema';
+import { authorRef } from '@/lib/authors';
 import Image from 'next/image';
 import { imageUrl, isoDate, summarise } from '@/lib/format';
 import styles from './ListingView.module.css';
@@ -141,7 +142,7 @@ export async function ListingView({
         url: canonical(p.slug),
         datePublished: isoDate(p.published_at),
         description: p.excerpt?.trim() || summarise(p.excerpt ?? '') || undefined,
-        author: { '@id': ORG_ID },
+        author: authorRef(p.author),
         publisher: { '@id': ORG_ID },
       },
     })),
