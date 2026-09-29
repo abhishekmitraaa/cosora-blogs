@@ -1,0 +1,80 @@
+.nav {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 24px 32px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.page {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-body);
+  border: 1px solid var(--rule);
+  transition: all 0.3s var(--ease);
+}
+.page:hover {
+  border-color: var(--cosora-red);
+  color: var(--cosora-red);
+  text-decoration: none;
+}
+
+.current,
+.current:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--white);
+}
+
+.arrow {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-body);
+}
+.arrow:hover {
+  color: var(--cosora-red);
+  text-decoration: none;
+}
+
+.disabled {
+  color: var(--rule);
+  cursor: default;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 720px) {
+  .nav {
+    padding: 16px 20px 0;
+    gap: 10px;
+  }
+}

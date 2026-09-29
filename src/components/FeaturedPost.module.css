@@ -1,0 +1,124 @@
+.section {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 48px 32px 8px;
+}
+
+.kicker {
+  margin: 0 0 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.link {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px;
+  align-items: center;
+  color: inherit;
+}
+.link:hover {
+  text-decoration: none;
+}
+
+.frame {
+  position: relative;
+  flex: 1 1 560px;
+  height: clamp(320px, 42vw, 540px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--card);
+  box-shadow: 0 30px 70px -30px rgba(239, 77, 98, 0.35);
+}
+
+.image {
+  object-fit: cover;
+  transition: transform 1.2s var(--ease);
+}
+.link:hover .image {
+  transform: scale(1.04);
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #efede8 0%, #e2dfd8 100%);
+}
+
+.watermark {
+  position: absolute;
+  right: 20px;
+  bottom: 18px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.body {
+  flex: 1 1 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.category {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--cosora-red);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(28px, 2.9vw, 40px);
+  line-height: 1.14;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  text-wrap: balance;
+  transition: color 0.25s var(--ease);
+}
+.link:hover .title {
+  color: var(--cosora-red);
+}
+
+.excerpt {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.byline {
+  margin: 0;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.link:hover .more {
+  color: var(--cosora-red);
+}
+
+@media (max-width: 720px) {
+  .section {
+    padding: 32px 20px 0;
+  }
+  .link {
+    gap: 24px;
+  }
+}

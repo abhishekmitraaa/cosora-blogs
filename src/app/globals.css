@@ -1,0 +1,146 @@
+/*
+ * Cosora brand tokens, lifted from the Cosora Journal design reference
+ * (design/Cosora Journal.html) and cross-checked against the live `site_theme`
+ * row in Supabase. Do not invent values here — this is the app's brand surface.
+ */
+:root {
+  /* Brand */
+  --cosora-red: #ef4d62;          /* buyer primary / journal accent */
+  --cosora-red-dark: #e62a43;
+  --wordmark-red: #c8102e;        /* matches the COSORA wordmark asset */
+  --ink: #262626;                 /* display + headings */
+  --ink-body: #363636;            /* body copy */
+  --muted: #6b6862;               /* journal muted (warm) */
+  --muted-cool: #737373;          /* app muted (cool) */
+  --faint: #8a8780;
+  --rule: #e2dfd8;                /* warm hairline on paper bg */
+  --rule-cool: #e5e7eb;
+  --paper: #fafaf8;               /* journal page background */
+  --card: #efede8;                /* image placeholder */
+  --white: #fff;
+  --surface-sunken: #f9fafb;
+
+  /* Type */
+  --font-display: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
+  --font-heading: var(--font-roboto), system-ui, sans-serif;
+  --font-body: var(--font-open-sans), system-ui, sans-serif;
+
+  --tracking-eyebrow: 0.1em;
+  --tracking-wide: 0.18em;
+
+  /* Geometry */
+  --radius: 12px;
+  --radius-lg: 16px;
+  --pill: 999px;
+  --content-max: 1200px;
+  --article-max: 1152px;
+  --measure: 680px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Anchor targets from the table of contents clear the sticky header. */
+  scroll-padding-top: 96px;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink-body);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--cosora-red);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+img {
+  max-width: 100%;
+}
+
+::selection {
+  background: rgba(239, 77, 98, 0.18);
+}
+
+:focus-visible {
+  outline: 2px solid var(--cosora-red);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Skip link — the header nav sits in front of the article on every page. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 12px 20px;
+  background: var(--ink);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 0 0 var(--radius) 0;
+}
+.skip-link:focus {
+  left: 0;
+  text-decoration: none;
+}
+
+.wrap {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  line-height: 0.9;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+@media (max-width: 720px) {
+  .wrap {
+    padding: 0 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,36 @@
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+.button {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--pill);
+  border: 1px solid var(--rule-cool);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-body);
+  background: var(--white);
+  transition: all 0.25s var(--ease);
+}
+.button:hover {
+  border-color: var(--cosora-red);
+  color: var(--cosora-red);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px -2px rgba(239, 77, 98, 0.25);
+  text-decoration: none;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
