@@ -46,15 +46,31 @@
   color: var(--cosora-red);
 }
 
-.intro {
-  max-width: 520px;
+/* Holds the rule, so a category with several paragraphs of copy keeps one
+   closing hairline instead of one per paragraph. */
+.introBlock {
+  max-width: var(--measure);
   margin: 28px 0 0;
   padding-bottom: 40px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.intro {
+  max-width: 520px;
+  margin: 0;
   font-size: 17px;
   line-height: 1.65;
   color: var(--muted);
   text-wrap: pretty;
-  border-bottom: 1px solid var(--rule);
+}
+
+/* Body paragraphs of a category description: reading size, reading colour. */
+.introBody {
+  margin: 18px 0 0;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink-body);
+  text-wrap: pretty;
 }
 
 .gridSection {

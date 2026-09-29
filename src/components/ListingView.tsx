@@ -69,10 +69,18 @@ export async function ListingView({
     [basePath.replace(/^\//, ''), page > 1 ? `page/${page}` : ''].filter(Boolean).join('/'),
   );
 
-  /** Intro copy: the category's own description when an editor wrote one. */
-  const intro = category
+  /**
+   * Intro copy: the category's own description when an editor wrote one.
+   *
+   * Split on blank lines. The first paragraph is the lead, set at the same size
+   * the unfiltered listing uses for the tagline; the rest run underneath at
+   * reading size. A category page with one sentence on it is a thin page, and
+   * this field is where the substance goes.
+   */
+  const introText = category
     ? category.description?.trim() || category.seo_description?.trim() || SITE_TAGLINE
     : SITE_TAGLINE;
+  const [introLead, ...introRest] = introText.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
   const breadcrumb = {
     '@context': 'https://schema.org',
@@ -204,7 +212,14 @@ export async function ListingView({
               </>
             )}
           </h1>
-          <p className={styles.intro}>{intro}</p>
+          <div className={styles.introBlock}>
+            <p className={styles.intro}>{introLead}</p>
+            {introRest.map((p) => (
+              <p key={p.slice(0, 40)} className={styles.introBody}>
+                {p}
+              </p>
+            ))}
+          </div>
         </section>
 
         {page === 1 && featured ? <FeaturedPost post={featured} /> : null}
