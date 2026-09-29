@@ -38,7 +38,7 @@ export const revalidate = 3600;
  * slug collides with one would be unreachable. Skip them at build rather than
  * emitting a route that silently resolves to the listing.
  */
-const RESERVED = new Set(['category', 'page', 'api']);
+const RESERVED = new Set(['category', 'page', 'api', 'about']);
 
 type Params = { params: Promise<{ slug: string }> };
 
