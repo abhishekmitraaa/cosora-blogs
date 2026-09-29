@@ -59,7 +59,17 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     stripMarkdown(post.body, 160);
   // canonical_url lets an editor point a republished piece at its original.
   const url = post.canonical_url?.trim() || canonical(post.slug);
-  const image = absoluteUrl(post.og_image) ?? absoluteUrl(post.hero_image);
+
+  /**
+   * Explicit rather than relying on Next to merge the opengraph-image file
+   * convention: setting openGraph.images at all, even to undefined, suppresses
+   * that merge, and the tag silently disappeared in production. Pointing at the
+   * generated route by URL is deterministic and survives the reverse proxy.
+   */
+  const image =
+    absoluteUrl(post.og_image) ??
+    absoluteUrl(post.hero_image) ??
+    `${canonical(post.slug)}/opengraph-image`;
 
   return {
     title: { absolute: `${title} · ${SITE_NAME}` },
