@@ -5,6 +5,7 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SocialIcon } from '@/components/SocialIcon';
 import { getCategories } from '@/lib/posts';
+import { ORG_ID, organizationSchema } from '@/lib/schema';
 import {
   canonical,
   CONTACT_EMAIL,
@@ -96,33 +97,9 @@ export default async function AboutPage() {
   /**
    * Organization is the important one: `sameAs` is what ties this page, the
    * marketplace and the social accounts into a single entity in a knowledge
-   * graph, and this is the only page on either origin that emits it.
+   * graph. Shared with the listing so the two can never drift apart.
    */
-  const organization = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    '@id': `${COSORA_URL}/#organization`,
-    name: 'Cosora',
-    legalName: LEGAL_NAME,
-    url: COSORA_URL,
-    logo: {
-      '@type': 'ImageObject',
-      url: `${COSORA_URL}/blogs/cosora-logo.png`,
-      width: 420,
-      height: 86,
-    },
-    description: DESCRIPTION,
-    foundingDate: FOUNDED,
-    email: CONTACT_EMAIL,
-    areaServed: { '@type': 'Country', name: 'India' },
-    knowsAbout: [
-      'B2B sourcing',
-      'Textile manufacturing',
-      'Apparel manufacturing',
-      'Fabric sourcing',
-    ],
-    sameAs: SOCIALS.map((s) => s.href),
-  };
+  const organization = organizationSchema();
 
   const aboutPage = {
     '@context': 'https://schema.org',
@@ -130,7 +107,7 @@ export default async function AboutPage() {
     name: TITLE,
     description: DESCRIPTION,
     url: URL,
-    mainEntity: { '@id': `${COSORA_URL}/#organization` },
+    mainEntity: { '@id': ORG_ID },
     isPartOf: { '@type': 'Blog', '@id': canonical(), name: SITE_NAME },
     inLanguage: 'en-IN',
   };

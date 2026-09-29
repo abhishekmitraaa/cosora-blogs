@@ -15,8 +15,9 @@ import {
   type Category,
 } from '@/lib/posts';
 import { canonical, COSORA_URL, MARKETPLACE, SITE_NAME, SITE_TAGLINE } from '@/lib/site';
+import { ORG_ID, organizationSchema, SITE_ID, websiteSchema } from '@/lib/schema';
 import Image from 'next/image';
-import { imageUrl } from '@/lib/format';
+import { imageUrl, isoDate, summarise } from '@/lib/format';
 import styles from './ListingView.module.css';
 
 const MONTH = new Intl.DateTimeFormat('en-GB', {
@@ -64,6 +65,15 @@ export async function ListingView({
   const gridTitle = category ? `All in ${category.name}` : 'Latest';
   const shown = total + (featured ? 1 : 0);
 
+  const listingUrl = canonical(
+    [basePath.replace(/^\//, ''), page > 1 ? `page/${page}` : ''].filter(Boolean).join('/'),
+  );
+
+  /** Intro copy: the category's own description when an editor wrote one. */
+  const intro = category
+    ? category.description?.trim() || category.seo_description?.trim() || SITE_TAGLINE
+    : SITE_TAGLINE;
+
   const breadcrumb = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -83,9 +93,63 @@ export async function ListingView({
     ],
   };
 
+  /**
+   * The Blog entity itself. A category listing is a section of the same Blog
+   * rather than a Blog of its own, so it points back at the root @id.
+   */
+  const blog = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    '@id': `${canonical()}/#blog`,
+    url: canonical(),
+    name: SITE_NAME,
+    description: SITE_TAGLINE,
+    inLanguage: 'en-IN',
+    publisher: { '@id': ORG_ID },
+    isPartOf: { '@id': SITE_ID },
+    ...(category ? { hasPart: { '@type': 'CollectionPage', url: listingUrl, name: category.name } } : {}),
+  };
+
+  /**
+   * What is actually on this page, in the order it is rendered — featured post
+   * first, since that is the reading order a person sees.
+   */
+  const ordered = [...(page === 1 && featured ? [featured] : []), ...posts];
+  const itemList = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    '@id': `${listingUrl}#itemlist`,
+    name: category ? `${category.name} stories` : `${SITE_NAME} stories`,
+    numberOfItems: ordered.length,
+    itemListOrder: 'https://schema.org/ItemListOrderDescending',
+    itemListElement: ordered.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: canonical(p.slug),
+      item: {
+        '@type': 'BlogPosting',
+        '@id': canonical(p.slug),
+        headline: p.title,
+        url: canonical(p.slug),
+        datePublished: isoDate(p.published_at),
+        description: p.excerpt?.trim() || summarise(p.excerpt ?? '') || undefined,
+        author: { '@id': ORG_ID },
+        publisher: { '@id': ORG_ID },
+      },
+    })),
+  };
+
+  // WebSite and Organization describe the site as a whole, so they are emitted
+  // once from its root rather than repeated on every paginated variant.
+  const isRoot = categorySlug === null && page === 1;
+
   return (
     <>
       <JsonLd data={breadcrumb} />
+      <JsonLd data={blog} />
+      <JsonLd data={itemList} />
+      {isRoot ? <JsonLd data={websiteSchema()} /> : null}
+      {isRoot ? <JsonLd data={organizationSchema()} /> : null}
       <SiteHeader categories={categories} />
 
       <main id="main">
@@ -140,7 +204,7 @@ export async function ListingView({
               </>
             )}
           </h1>
-          <p className={styles.intro}>{SITE_TAGLINE}</p>
+          <p className={styles.intro}>{intro}</p>
         </section>
 
         {page === 1 && featured ? <FeaturedPost post={featured} /> : null}
