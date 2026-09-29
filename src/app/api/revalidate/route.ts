@@ -3,12 +3,15 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { BASE_PATH, PUBLIC_BASE_URL } from '@/lib/site';
 
 /**
- * ISR revalidation hook, called by a Supabase Database Webhook on
- * INSERT/UPDATE/DELETE of public.blog_posts.
+ * ISR revalidation hook, called by database triggers on INSERT/UPDATE/DELETE of
+ * public.blog_posts (trg_blog_posts_revalidate) and public.blog_categories
+ * (trg_blog_categories_revalidate), both in textile-spark-net's migrations.
  *
- * Purges the listing routes plus the affected article so a newly published (or
- * unpublished, or re-slugged) post appears without a redeploy. Both the old and new
- * slug are purged on UPDATE, otherwise a renamed post leaves a stale page behind.
+ * A post change purges the listing routes plus the affected article, so a newly
+ * published (or unpublished, or re-slugged) post appears without a redeploy. Both
+ * the old and new slug are purged on UPDATE, otherwise a renamed post leaves a
+ * stale page behind. A category change purges the whole app, because category
+ * names appear on every page.
  */
 export const dynamic = 'force-dynamic';
 
@@ -56,28 +59,39 @@ export async function POST(request: NextRequest) {
     // generated variant, e.g. all /category/* pages in one call.
     if (type) revalidatePath(path, type);
     else revalidatePath(path);
-    revalidated.push(path);
+    revalidated.push(type ? `${path} (${type})` : path);
   };
-
-  // Listings always change when any post changes: ordering, counts, pagination.
-  purge('/');
-  purge('/page/[page]', 'page');
-  purge('/category/[category]', 'page');
-  purge('/category/[category]/page/[page]', 'page');
 
   const slugs = new Set(
     [body.record?.slug, body.old_record?.slug].filter(
       (s): s is string => typeof s === 'string' && s.length > 0,
     ),
   );
-  for (const slug of slugs) purge(`/${slug}`);
+
+  // Paths under /blogs to submit to IndexNow. Both old and new are sent on a
+  // rename, so the dead URL gets recrawled to its 404 rather than lingering.
+  let changed: string[];
+
+  if (body.table === 'blog_categories') {
+    // A category's name and slug are on every page, not just its own listing:
+    // the header nav, every article's breadcrumb and category label, and the
+    // category tabs. Purging the root layout invalidates the whole app at once,
+    // which is also what makes a renamed category's old URL start 404ing.
+    purge('/', 'layout');
+    changed = [...slugs].map((s) => `category/${s}`);
+  } else {
+    // Listings always change when any post changes: ordering, counts, pagination.
+    purge('/');
+    purge('/page/[page]', 'page');
+    purge('/category/[category]', 'page');
+    purge('/category/[category]/page/[page]', 'page');
+    for (const slug of slugs) purge(`/${slug}`);
+    changed = [...slugs];
+  }
 
   // Tell the IndexNow engines (Bing, Yandex, Naver, Seznam) directly. Google is
   // not an IndexNow consumer and is covered by the sitemap instead.
-  //
-  // Both slugs are submitted on a rename, so the dead URL gets recrawled to its
-  // 404 rather than lingering in the index.
-  const indexNow = await pingIndexNow([...slugs]);
+  const indexNow = await pingIndexNow(changed);
 
   return NextResponse.json({
     revalidated: true,
@@ -96,17 +110,17 @@ export async function POST(request: NextRequest) {
  * keyLocation authorises only URLs beneath its own directory, and every URL here
  * is under /blogs/, so that is both valid and self-contained.
  */
-async function pingIndexNow(slugs: string[]): Promise<string> {
+async function pingIndexNow(paths: string[]): Promise<string> {
   const key = process.env.INDEXNOW_KEY;
   if (!key) return 'skipped: no INDEXNOW_KEY';
-  if (!slugs.length) return 'skipped: no slugs';
+  if (!paths.length) return 'skipped: no paths';
 
   const host = new URL(PUBLIC_BASE_URL).host;
   const payload = {
     host,
     key,
     keyLocation: `${PUBLIC_BASE_URL}${BASE_PATH}/${key}.txt`,
-    urlList: slugs.map((s) => `${PUBLIC_BASE_URL}${BASE_PATH}/${s}`),
+    urlList: paths.map((p) => `${PUBLIC_BASE_URL}${BASE_PATH}/${p}`),
   };
 
   try {
