@@ -5,8 +5,11 @@ import { BASE_PATH, PUBLIC_BASE_URL } from '@/lib/site';
 /**
  * ISR revalidation hook, called by database triggers on INSERT/UPDATE/DELETE of
  * public.blog_posts (trg_blog_posts_revalidate), public.blog_categories
- * (trg_blog_categories_revalidate) and public.authors (trg_authors_revalidate),
- * all in textile-spark-net's migrations.
+ * (trg_blog_categories_revalidate), public.authors (trg_authors_revalidate) and
+ * public.blog_settings (trg_blog_settings_revalidate), and every 5 minutes by
+ * admin.blog_scheduled_sweep() for each post whose publish time has just passed,
+ * all in textile-spark-net's migrations. The secret comes in the
+ * x-revalidate-secret header only.
  *
  * A post change purges the listing routes, the author pages and the affected
  * article, so a newly published (or unpublished, re-slugged or reassigned) post
@@ -37,11 +40,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'REVALIDATE_SECRET is not configured' }, { status: 500 });
   }
 
-  // Supabase webhooks send custom headers; accept either the header or ?secret=.
-  const provided =
-    request.headers.get('x-revalidate-secret') ??
-    request.nextUrl.searchParams.get('secret') ??
-    '';
+  // The header only. A ?secret= query parameter was also accepted, but every caller (the database
+  // triggers and admin.blog_scheduled_sweep) sends the header, and a secret in a URL ends up in request
+  // logs, proxy logs and browser history (2026-10-20 audit).
+  const provided = request.headers.get('x-revalidate-secret') ?? '';
 
   if (!safeEqual(provided, expected)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -84,6 +86,11 @@ export async function POST(request: NextRequest) {
     // Same reasoning: an author's name and role are on every card and byline.
     purge('/', 'layout');
     changed = [...slugs].map((s) => `authors/${s}`);
+  } else if (body.table === 'blog_settings') {
+    // The landing hero (trg_blog_settings_revalidate, 2026-10-20). ListingView shows it on the first
+    // page of the unfiltered listing only. Nothing for search engines: no article changed.
+    purge('/');
+    changed = [];
   } else {
     // Listings always change when any post changes: ordering, counts, pagination.
     purge('/');
