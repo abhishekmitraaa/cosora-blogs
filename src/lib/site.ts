@@ -49,13 +49,31 @@ export const MARKETPLACE = {
   postRfq: `${COSORA_URL}/go/post-rfq`,
   browseProducts: `${COSORA_URL}/search`,
   becomeSeller: `${COSORA_URL}/seller`,
+  contact: `${COSORA_URL}/contact`,
+  privacy: `${COSORA_URL}/privacy`,
+  terms: `${COSORA_URL}/terms`,
+  refund: `${COSORA_URL}/refund-policy`,
 } as const;
 
-/** The public contact address, as published on the marketplace. */
-export const CONTACT_EMAIL = 'hello@cosora.in';
+/**
+ * The company behind Cosora (Mitra, 2026-11-24). The same values as the marketplace's src/lib/company.ts
+ * (textile-spark-net): Meta checks that the brand belongs to this company, so name, address and phone must read the
+ * same on every page of both apps. Change them together.
+ */
+export const LEGAL_NAME = 'Fearce Textiles Private Limited';
+export const REGISTERED_ADDRESS =
+  'Innov8 Orchid Center 3rd floor, Orchid Center, Golf Course Road, SEC-53,Gurugram, HR, IND, 122022';
+export const CIN = 'U47912HR2024PTC118434';
+export const GSTIN = '06AAFCF7943P1ZZ';
+/** As written on every page; CONTACT_PHONE_E164 for tel: links and JSON-LD. */
+export const CONTACT_PHONE = '+91 7904840367';
+export const CONTACT_PHONE_E164 = '+917904840367';
 
-/** Registered entity, used in the About imprint and in Organization JSON-LD. */
-export const LEGAL_NAME = 'Cosora Technologies Pvt Ltd';
+/** The public contact address, as published on the marketplace. */
+export const CONTACT_EMAIL = 'teamcosora@gmail.com';
+
+/** The footer's line, as on the marketplace. */
+export const COMPANY_COPYRIGHT = `© 2026 ${LEGAL_NAME}. Cosora is a brand of ${LEGAL_NAME}.`;
 
 /** Year Cosora was founded. Stated on the marketplace's own About copy. */
 export const FOUNDED = '2024';

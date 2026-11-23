@@ -4,6 +4,9 @@ import {
   COSORA_URL,
   FOUNDED,
   LEGAL_NAME,
+  CIN,
+  CONTACT_PHONE_E164,
+  GSTIN,
   SITE_NAME,
   SITE_TAGLINE,
   SOCIALS,
@@ -47,6 +50,18 @@ export function organizationSchema() {
     description: ORG_DESCRIPTION,
     foundingDate: FOUNDED,
     email: CONTACT_EMAIL,
+    telephone: CONTACT_PHONE_E164,
+    // The registered office, field by field from the address as published (Mitra, 2026-11-24).
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Innov8 Orchid Center 3rd floor, Orchid Center, Golf Course Road, SEC-53',
+      addressLocality: 'Gurugram',
+      addressRegion: 'HR',
+      postalCode: '122022',
+      addressCountry: 'IN',
+    },
+    taxID: GSTIN,
+    identifier: { '@type': 'PropertyValue', propertyID: 'CIN', value: CIN },
     areaServed: { '@type': 'Country', name: 'India' },
     knowsAbout: [
       'B2B sourcing',

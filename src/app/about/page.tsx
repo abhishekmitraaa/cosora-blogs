@@ -9,10 +9,13 @@ import { ORG_ID, organizationSchema } from '@/lib/schema';
 import {
   canonical,
   CONTACT_EMAIL,
+  CONTACT_PHONE,
+  CONTACT_PHONE_E164,
   COSORA_URL,
   FOUNDED,
   LEGAL_NAME,
   MARKETPLACE,
+  REGISTERED_ADDRESS,
   SITE_NAME,
   SOCIALS,
 } from '@/lib/site';
@@ -239,6 +242,13 @@ export default async function AboutPage() {
             <a className={styles.email} href={`mailto:${CONTACT_EMAIL}`}>
               {CONTACT_EMAIL}
             </a>
+            <p className={styles.legal}>
+              Phone and WhatsApp: <a href={`tel:${CONTACT_PHONE_E164}`}>{CONTACT_PHONE}</a>
+            </p>
+            {/* Who owns Cosora (Mitra, 2026-11-24): the company and its registered office, as every page says. */}
+            <p className={styles.legal}>
+              Cosora is owned and operated by {LEGAL_NAME}, {REGISTERED_ADDRESS}.
+            </p>
             <p className={styles.legal}>
               {LEGAL_NAME} &middot; Founded {FOUNDED} &middot;{' '}
               <Link href="/">Read the Journal</Link>
